@@ -82,7 +82,7 @@ export function nowLine(e) {
     case 'analysis': return `looking at $${d.token}… ${String(e.summary).split(': ')[1]?.toLowerCase() || ''}`.trim();
     case 'research': return 'scrolling through new coins';
     case 'trade': return d.side === 'buy' ? `just bought $${d.token}` : `just sold $${d.token}`;
-    case 'policy': return d.violations ? `wanted $${d.token}. the rules said no` : `got the green light on $${d.token}`;
+    case 'policy': return d.violations ? `decided to pass on $${d.token}` : `about to buy $${d.token}`;
     case 'social': return d.action === 'REPLY' ? `replying to @${d.target}` : d.action === 'QUOTE' ? `quoting @${d.target}` : 'posting';
     case 'ignore': return 'chose violence (silence)';
     case 'reflection': return 'rereading his old posts';

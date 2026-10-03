@@ -42,7 +42,7 @@ export function publicState() {
     identity: agent.identity && {
       name: agent.identity.name, username: agent.identity.username, bio: agent.identity.bio, backstory: agent.identity.backstory,
       traits: agent.identity.personalityTraits, worldview: agent.identity.worldview, trading: agent.identity.trading,
-      age: agent.identity.age, humor: agent.identity.humorStyle, basedIn: agent.identity.basedIn, offTheCharts: agent.identity.offTheCharts, ambitions: agent.identity.ambitions, insecurities: agent.identity.insecurities,
+      age: agent.identity.age, humor: agent.identity.humorStyle, basedIn: agent.identity.basedIn, offTheCharts: agent.identity.offTheCharts, origin: agent.identity.origin || [], ambitions: agent.identity.ambitions, insecurities: agent.identity.insecurities,
     },
     coin: agent.coin && { name: agent.coin.name, ticker: agent.coin.ticker, concept: agent.coin.concept, lore: agent.coin.lore, address: agent.coin.address },
     visual: agent.visual && { summary: agent.visual.summary, palette: agent.visual.colorPalette, setting: agent.visual.environmentByTier?.[tier] },
@@ -70,7 +70,6 @@ export function publicState() {
     relationships: Object.values(memory.people).sort((a, b) => b.interactions.length - a.interactions.length).slice(0, 12)
       .map((p) => ({ handle: p.handle, sentiment: p.sentiment, tags: p.tags, interactions: p.interactions.length, lastSeen: p.lastSeen })),
     lastReflection,
-    policy: config.policy,
   };
 }
 

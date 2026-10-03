@@ -17,7 +17,7 @@ test('mood follows the wallet', () => {
 
 test('now line describes what he is doing', () => {
   assert.equal(nowLine({ type: 'trade', data: { side: 'buy', token: 'XYZ' } }), 'just bought $XYZ');
-  assert.equal(nowLine({ type: 'policy', data: { token: 'XYZ', violations: ['x'] } }), 'wanted $XYZ. the rules said no');
+  assert.equal(nowLine({ type: 'policy', data: { token: 'XYZ', violations: ['x'] } }), 'decided to pass on $XYZ');
   assert.equal(nowLine({ type: 'system', data: {} }), null);
 });
 

@@ -17,7 +17,7 @@
   <div class="presence" id="presence"><i aria-hidden="true"></i><span>…</span></div>
   <div class="handle" id="handle"></div>
   <ul>
-    <li><a href="#treasury">Treasury</a></li>
+    <li><a href="#port">Port</a></li>
     <li><a href="#positions">Positions</a></li>
     <li><a href="#results">Ws &amp; Ls</a></li>
     <li><a href="#log">Log</a></li>
@@ -32,13 +32,13 @@
 </header>
 
 <main>
-  <section class="chapter" id="treasury" style="padding-top:clamp(64px,8vw,120px)">
-    <div class="chapter-head reveal"><span class="no">01 / Treasury</span><h2>The <em>money</em></h2></div>
+  <section class="chapter" id="port" style="padding-top:clamp(64px,8vw,120px)">
+    <div class="chapter-head reveal"><span class="no">01 / Port</span><h2>His <em>port</em></h2></div>
     <div class="money-top reveal">
-      <div><div class="eyebrow">Total</div><div class="total" id="m-total">—</div></div>
+      <div><div class="eyebrow">Port value</div><div class="total" id="m-total">—</div></div>
       <div class="chg"><div class="eyebrow">Last 24h</div><div class="v" id="m-chg">—</div></div>
     </div>
-    <div class="chartwrap reveal" id="chartwrap"><svg id="chart" preserveAspectRatio="none" role="img" aria-label="Treasury over time"></svg><div class="tip" id="tip"></div></div>
+    <div class="chartwrap reveal" id="chartwrap"><svg id="chart" preserveAspectRatio="none" role="img" aria-label="Port value over time"></svg><div class="tip" id="tip"></div></div>
     <div class="split reveal" id="split"></div>
     <p class="source reveal" id="source"></p>
   </section>
@@ -61,10 +61,6 @@
     </div>
   </section>
 
-  <section class="chapter" id="rules">
-    <div class="chapter-head reveal"><span class="no">05 / Risk</span><h2>His <em>rules</em></h2></div>
-    <div class="rules reveal" id="laws"></div>
-  </section>
 </main>
 
 <footer>
@@ -74,8 +70,8 @@
 
 <script src="/site.js"></script>
 <script>
-const TRADING_EVENTS = new Set(['analysis', 'policy', 'trade', 'fees']);
-const LABEL = { analysis: 'looked', policy: 'rules', trade: 'trade', fees: 'fees' };
+const TRADING_EVENTS = new Set(['analysis', 'trade', 'fees']);
+const LABEL = { analysis: 'looked', trade: 'trade', fees: 'fees' };
 
 function logLine(e, fresh) {
   const d = e.data || {};
@@ -94,10 +90,10 @@ function render(s) {
   const base = s.history.find((h) => Date.parse(h.at) >= Date.now() - 86400000);
   const chg = base ? t.total / base.treasuryUsd - 1 : null;
   $('m-chg').innerHTML = chg == null ? '—' : `<span class="${cls(chg)}">${pct(chg)}</span>`;
-  const parts = [['In coins', t.portfolio], ['Free to trade', t.available], ['Reserve', t.reserve], ['Operations', t.operations]];
+  const parts = [['In coins', t.portfolio], ['Cash', t.cash], ['Coins held', s.positions.length, 'n'], ['Closed trades', s.closed.length, 'n']];
   const total = Math.max(1, t.total);
-  $('split').innerHTML = parts.map(([k, v]) => `<div><div class="eyebrow">${k}</div><div class="v">${usd(v)}</div><div class="bar"><i style="width:${Math.max(0, Math.min(100, v / total * 100))}%"></i></div></div>`).join('');
-  $('source').innerHTML = `It all started with <b>${s.coin ? '$' + esc(s.coin.ticker) : 'his coin'}</b> creator fees: ${usd(t.feesEarned)} so far. Most of it stays in reserve. Only the trading slice ever gets bet.`;
+  $('split').innerHTML = parts.map(([k, v, kind]) => `<div><div class="eyebrow">${k}</div><div class="v">${kind === 'n' ? v : usd(v)}</div>${kind === 'n' ? '' : `<div class="bar"><i style="width:${Math.max(0, Math.min(100, v / total * 100))}%"></i></div>`}</div>`).join('');
+  $('source').innerHTML = `The whole port started from <b>${s.coin ? '$' + esc(s.coin.ticker) : 'his coin'}</b> creator fees: ${usd(t.feesEarned)} so far.`;
   drawChart(s.history);
 
   $('rows').innerHTML = s.positions.length
@@ -114,14 +110,6 @@ function render(s) {
     ? pages.map((e) => `<article class="page reveal"><div class="date"><span class="stamp ${e.k}">${esc(e.stamp)}</span><span class="eyebrow">${stamp(e.at)}</span></div><h3>${esc(e.h)}</h3><p>${esc(e.p)}</p><small>${esc(e.small)}</small></article>`).join('')
     : '<p class="none">Nothing closed yet. Ls get posted here too.</p>';
 
-  const p = s.policy;
-  const laws = [
-    ['Largest single bet', `${usd(p.maxTradeUsd)} · ${p.maxTradePctOfTreasury * 100}% of treasury`], ['Largest position', `${p.maxPositionPctOfTreasury * 100}% of treasury`],
-    ['Reserve he never touches', `${p.buckets.reserve * 100}%`], ['Minimum liquidity', usd(p.minLiquidityUsd)],
-    ['Stop loss', `${p.stopLossPct * 100}%`], ['Bets per day', p.maxTradesPerDay],
-    ['Posts about a coin he holds', 'always disclosed'], ['After posting about a coin', `no selling for profit for ${p.mentionLockHours}h`],
-  ];
-  $('laws').innerHTML = laws.map(([k, v]) => `<div class="law"><span>${k}</span><span>${esc(v)}</span></div>`).join('');
 }
 
 fitters.push(() => {

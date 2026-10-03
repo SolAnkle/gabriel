@@ -78,6 +78,28 @@ export async function runGenesis({ force = false, seed = '' } = {}) {
   update('agent', (a) => (a.identity.trading = trading));
   step(n++, 'Trading philosophy established', `${trading.riskTolerance} risk: ${trading.philosophy}`);
 
+  // 3b. Origin story: how he ended up trading memecoins. Shown on the site as his story.
+  const story = await think({
+    label: 'genesis:story', effort: 'high', system: [...base, JSON.stringify(identity)],
+    prompt: `Your trading philosophy: ${JSON.stringify(trading)}
+
+Tell the story of how you got into trading memecoins, as 4 to 6 moments in order: life before crypto, the first coin
+you bought, the first time it really worked, the first time it really hurt, and why you stayed. Make it specific
+(places, amounts, what you ate, who was there) and in your own voice. It must be original: don't base it on any real
+person's history. Each moment gets a short "when" (like "2021" or "the winter before"), a title of a few words, and
+2-4 sentences.`,
+    schema: obj({ moments: arr(obj({ when: str(), title: str(), text: str() })) }),
+    offline: () => ({ moments: [
+      { when: 'before', title: 'Night shifts', text: 'Worked nights at a 24-hour print shop. Spent the dead hours reading crypto threads on a cracked phone and pretending to understand them.' },
+      { when: '2021', title: 'The first dog coin', text: 'Put $60 into a dog coin because the logo looked like his neighbour\'s dog. It went to $900 in four days. He told nobody and ate the same ramen for a week out of superstition.' },
+      { when: 'that summer', title: 'Thought he was a genius', text: 'Quit the print shop. Bought a second monitor. Started explaining narratives to people who had not asked.' },
+      { when: 'the winter', title: 'Minus ninety', text: 'Watched 90% of everything go in one week. Sold the second monitor. Kept posting anyway, mostly about the losses, and people started following for those.' },
+      { when: 'now', title: 'Why he stayed', text: 'Not for the money, he says, which nobody believes. For the timeline at 3am, the chats, and the feeling of being early to a joke before everyone else gets it.' },
+    ] }),
+  });
+  update('agent', (a) => (a.identity.origin = story.moments.slice(0, 6)));
+  step(n++, 'Origin story written', `${story.moments.length} moments`);
+
   // 4. Visual identity
   const visual = await think({
     label: 'genesis:visual', effort: 'medium', system: [...base, JSON.stringify(identity)],

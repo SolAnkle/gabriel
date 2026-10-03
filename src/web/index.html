@@ -18,6 +18,7 @@
   <div class="handle" id="handle"></div>
   <ul>
     <li><a href="#about">About</a></li>
+    <li><a href="#story">Story</a></li>
     <li><a href="#life">Life</a></li>
     <li><a href="#lately">Lately</a></li>
     <li><a href="#coin" id="nav-coin">Coin</a></li>
@@ -56,21 +57,26 @@
     <div class="chapter-head reveal"><span class="no">01 / About</span><h2>This is <em id="about-name">him</em></h2></div>
     <div class="about">
       <div class="reveal">
-        <p class="story" id="story"></p>
+        <p class="story" id="about-story"></p>
         <div class="tags" id="tags"></div>
       </div>
       <dl class="facts reveal" id="facts"></dl>
     </div>
   </section>
 
+  <section class="chapter" id="story">
+    <div class="chapter-head reveal"><span class="no">02 / Story</span><h2>How he <em>got here</em></h2></div>
+    <ol class="moments" id="moments"></ol>
+  </section>
+
   <section class="chapter" id="life">
-    <div class="chapter-head reveal"><span class="no">02 / Life</span><h2>His <em>life</em></h2></div>
+    <div class="chapter-head reveal"><span class="no">03 / Life</span><h2>His <em>life</em></h2></div>
     <div class="reel" id="reel"></div>
     <div class="chapterline reveal" id="chapterline"></div>
   </section>
 
   <section class="chapter" id="lately">
-    <div class="chapter-head reveal"><span class="no">03 / Lately</span><h2>What he's <em>saying</em></h2></div>
+    <div class="chapter-head reveal"><span class="no">04 / Lately</span><h2>What he's <em>saying</em></h2></div>
     <div class="said">
       <div class="reveal"><p class="pull" id="pull"></p><div class="pull-meta" id="pull-meta"></div></div>
       <div class="reveal">
@@ -81,7 +87,7 @@
   </section>
 
   <section class="chapter" id="coin">
-    <div class="chapter-head reveal"><span class="no">04 / His coin</span><h2>He made <em>a coin</em></h2></div>
+    <div class="chapter-head reveal"><span class="no">05 / His coin</span><h2>He made <em>a coin</em></h2></div>
     <div class="coinblock">
       <div class="tickwrap reveal" id="tickwrap"><div class="tick" id="coin-tick"></div><div class="name" id="coin-name"></div></div>
       <div class="reveal">
@@ -181,13 +187,19 @@ function render(s) {
 
   // ---- about ----
   $('about-name').textContent = name.charAt(0) + name.slice(1).toLowerCase();
-  $('story').textContent = id.backstory || '';
+  $('about-story').textContent = id.backstory || '';
   $('tags').innerHTML = [...(id.traits || []), ...(id.offTheCharts || [])].map((t) => `<span>${esc(t)}</span>`).join('');
   const facts = [
     ['Age', id.age], ['Lives', id.basedIn], ['Believes', id.worldview], ['Humour', id.humor],
     ['Wants', (id.ambitions || []).join(', ')], ['Secretly', (id.insecurities || []).join(', ')],
   ].filter(([, v]) => v);
   $('facts').innerHTML = facts.map(([k, v]) => `<div><dt class="eyebrow">${k}</dt><dd>${esc(v)}</dd></div>`).join('');
+
+  // ---- story ----
+  const moments = id.origin || [];
+  $('moments').innerHTML = moments.length
+    ? moments.map((m, i) => `<li class="moment reveal"><div class="meta"><span class="idx">${String(i + 1).padStart(2, '0')}</span><span class="eyebrow">${esc(m.when)}</span></div><div><h3>${esc(m.title)}</h3><p>${esc(m.text)}</p></div></li>`).join('')
+    : '<p class="none">His story is still being written.</p>';
 
   // ---- life ----
   const shots = [
@@ -226,7 +238,7 @@ function render(s) {
   // ---- trading band ----
   const wins = s.closed.filter((c) => c.pnlPct >= 0).length;
   $('desk-stats').innerHTML = [
-    ['Treasury', usd(s.treasury.total)],
+    ['Port', usd(s.treasury.total)],
     ['Holding', `${s.positions.length} coin${s.positions.length === 1 ? '' : 's'}`],
     ['Closed', s.closed.length ? `${wins}W · ${s.closed.length - wins}L` : '—'],
   ].map(([k, v]) => `<div><div class="eyebrow">${k}</div><div class="v">${v}</div></div>`).join('');
