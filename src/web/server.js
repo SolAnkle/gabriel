@@ -9,6 +9,7 @@ import { load, readLedger, onLedgerEvent } from '../store.js';
 import { capital, positionValue } from '../trading/policy.js';
 import { walletAddress } from '../trading/wallet.js';
 import { lifeTier } from '../trading/treasury.js';
+import { heroMedia, galleryMedia, mood, nowLine } from './character.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const PAGE = path.join(here, 'index.html');
@@ -18,8 +19,16 @@ export function publicState() {
   const pf = load('portfolio');
   const cap = capital(pf, config.policy);
   const memory = load('memory');
-  const lastReflection = readLedger(500).find((e) => e.type === 'reflection') || null;
+  const ledger = readLedger(500);
+  const lastReflection = ledger.find((e) => e.type === 'reflection') || null;
+  const tier = lifeTier(pf);
+  const scenes = load('content').briefs.slice(-12).reverse();
+  const nowEvent = ledger.find((e) => nowLine(e));
   return {
+    hero: heroMedia(tier, scenes),
+    gallery: galleryMedia(),
+    mood: mood({ status: agent.status, tier, snapshots: pf.snapshots, closed: pf.closed, lastEvent: ledger[0] }),
+    now: nowEvent ? { line: nowLine(nowEvent), at: nowEvent.at } : null,
     status: agent.status,
     modes: { trading: config.tradingMode, x: config.xMode, llm: config.llmEnabled ? 'live' : 'offline' },
     identity: agent.identity && {
@@ -27,10 +36,10 @@ export function publicState() {
       traits: agent.identity.personalityTraits, worldview: agent.identity.worldview, trading: agent.identity.trading,
     },
     coin: agent.coin && { name: agent.coin.name, ticker: agent.coin.ticker, concept: agent.coin.concept, lore: agent.coin.lore, address: agent.coin.address },
-    visual: agent.visual && { summary: agent.visual.summary },
+    visual: agent.visual && { summary: agent.visual.summary, palette: agent.visual.colorPalette },
     genesis: agent.genesis,
     wallet: walletAddress(),
-    lifeTier: lifeTier(pf),
+    lifeTier: tier,
     treasury: {
       total: cap.treasury, cash: pf.cashUsd, portfolio: pf.positions.reduce((s, p) => s + positionValue(p), 0),
       available: cap.available, reserve: cap.reserve, operations: cap.operations, deployed: cap.deployed,
@@ -47,7 +56,7 @@ export function publicState() {
       exitReason: c.exitReason, postMortem: c.postMortem, closedAt: c.closedAt,
     })),
     posts: load('social').posts.slice(-30).reverse(),
-    scenes: load('content').briefs.slice(-12).reverse().map(({ id, at, tier, trigger, format, scene, caption, status, mediaUrl }) => ({ id, at, tier, trigger, format, scene, caption, status, mediaUrl })),
+    scenes: scenes.map(({ id, at, tier, trigger, format, scene, caption, status, mediaUrl }) => ({ id, at, tier, trigger, format, scene, caption, status, mediaUrl })),
     relationships: Object.values(memory.people).sort((a, b) => b.interactions.length - a.interactions.length).slice(0, 12)
       .map((p) => ({ handle: p.handle, sentiment: p.sentiment, tags: p.tags, interactions: p.interactions.length, lastSeen: p.lastSeen })),
     lastReflection,
@@ -63,6 +72,7 @@ export function startServer(port = config.port) {
         res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
         return res.end(fs.readFileSync(PAGE));
       }
+      if (url.pathname.startsWith('/character/')) return sendMedia(res, decodeURIComponent(url.pathname.slice('/character/'.length)));
       if (url.pathname === '/api/state') return json(res, publicState());
       if (url.pathname === '/api/ledger') return json(res, readLedger(Math.min(500, Number(url.searchParams.get('limit')) || 100)));
       if (url.pathname === '/api/events') {
@@ -89,4 +99,16 @@ export function startServer(port = config.port) {
 function json(res, body) {
   res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store', 'access-control-allow-origin': '*' });
   res.end(JSON.stringify(body));
+}
+
+const TYPES = { '.png': 'image/png', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.mp4': 'video/mp4', '.webm': 'video/webm' };
+
+function sendMedia(res, name) {
+  // Only plain file names from the character folder: no paths, no traversal.
+  const type = TYPES[path.extname(name).toLowerCase()];
+  if (!type || name !== path.basename(name)) return res.writeHead(404).end('not found');
+  const file = path.join(config.characterDir, name);
+  if (!fs.existsSync(file)) return res.writeHead(404).end('not found');
+  res.writeHead(200, { 'content-type': type, 'cache-control': 'public, max-age=300' });
+  fs.createReadStream(file).pipe(res);
 }

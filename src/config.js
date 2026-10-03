@@ -11,6 +11,9 @@ const bool = (v, d = false) => (v == null || v === '' ? d : /^(1|true|yes|on)$/i
 export const config = {
   stateDir: process.env.STATE_DIR || path.join(here, '..', 'state'),
   kolDir: process.env.KOL_DIR || path.join(here, '..', 'data', 'kols'),
+  // Higgsfield renders of the character for the website (hero.png, hero-<tier>.png, extra shots).
+  characterDir: process.env.CHARACTER_DIR || path.join(here, '..', 'data', 'character'),
+  characterHeroUrl: process.env.CHARACTER_HERO_URL || '',
   port: num(process.env.PORT, 8787),
 
   // --- LLM ---

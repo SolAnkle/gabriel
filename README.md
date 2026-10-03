@@ -1,6 +1,6 @@
 # Autonomous Memecoin Agent
 
-An AI memecoin trader and influencer that people can watch. It designs its own identity, earns creator fees from its own coin, researches memecoins, buys some with part of its treasury, explains each decision, posts on X, remembers people, reflects on itself, and its visual life follows its wallet. Every step goes to a public activity ledger and a live dashboard.
+An AI memecoin trader and influencer that people can watch. It designs its own identity, earns creator fees from its own coin, researches memecoins, buys some with part of its treasury, explains each decision, posts on X, remembers people, reflects on itself, and its visual life follows its wallet. Every step goes to a public activity ledger and a character-first website.
 
 **Safe by default:** it paper-trades at live prices and writes posts to the dashboard instead of X. Real money and real posting each need explicit switches.
 
@@ -19,7 +19,7 @@ DexScreener feeds ─► metrics (code) ─► shortlist ─► holder/authority
                                                          │
              memory (people, jokes, predictions) · reflection · content briefs (Higgsfield)
                                                          │
-                                     public ledger ─► dashboard (live stream)
+                                     public ledger ─► character website (live stream)
 ```
 
 ## The core rule: the model wants, code decides
@@ -44,7 +44,7 @@ npm install
 cp .env.example .env          # optional: add ANTHROPIC_API_KEY for the real brain
 npm run genesis               # the agent creates itself (watch the ledger)
 npm run tick                  # one pass of market → social → reflection → content
-npm start                     # dashboard on http://localhost:8787 + autonomous loop
+npm start                     # website on http://localhost:8787 + autonomous loop
 ```
 
 Without `ANTHROPIC_API_KEY` the agent uses a scripted offline brain, so you can run the whole pipeline (real market data, paper trades, guard, dashboard) for free.
@@ -57,7 +57,7 @@ Other commands:
 | `node src/cli.js genesis --force --seed "..."` | Redo genesis with extra direction |
 | `node src/cli.js tick market` | Also `social`, `reflection`, `content` |
 | `node src/cli.js fees 250 "week 1 fees"` | Record creator-fee income (adds cash in paper mode) |
-| `npm run serve` | Dashboard only |
+| `npm run serve` | Website only |
 | `npm test` | Unit tests for policy, guard, style analysis, metrics and OAuth signing |
 
 ## How each part works
@@ -80,6 +80,12 @@ Other commands:
 
 **Content** (`src/content/engine.js`). Code decides when a new scene is warranted: life tier change (broke → surviving → comfortable → winning → rich, from treasury vs. lifetime fees), a ±30% treasury move, a big win, a rug, or a daily slice of life. The model writes the scene and caption on top of its fixed appearance. With `HIGGSFIELD_*` set, the brief is POSTed to your endpoint; otherwise it's queued on the dashboard.
 
+## The website
+
+The site is built around the character, not a trading terminal. The intro is a full-screen room: the Higgsfield render stands large in the centre with his name in giant letters behind him. Around him are his latest post as a speech bubble and his mood, which code derives from the wallet ("up bad", "in shambles", "locked in", "eating noodles"...) and which also tints the room's light. A live line at the bottom shows what he's doing right now. Scrolling down leads through his life: who he is and the coin he made, his wallet and bag (each coin with his own thesis), his diary of wins and losses, things he said, the people he knows, his life tier and scenes, a live feed of his thinking, how he was born, and the rules he can't break.
+
+**Put the character in:** drop Higgsfield renders into `data/character/` (see `data/character/README.md`). `hero.png` (ideally a transparent cut-out) or `hero.mp4` becomes the centre figure. `hero-broke.png` … `hero-rich.png` swap automatically as his life tier changes. Any other file shows in the life gallery. Until then, a placeholder silhouette holds his spot.
+
 ## Going live: checklist
 
 1. **Brain:** set `ANTHROPIC_API_KEY`, run `ingest-kols` with your dataset, then `genesis --force`. Read the identity it chose before going further.
@@ -91,7 +97,7 @@ Other commands:
 
 ## What's verified and what isn't
 
-- **Verified here:** unit tests (21 passing; the OAuth signature matches X's published example), and an offline end-to-end run against live DexScreener and Jupiter data: genesis, discovery, policy rejections, paper buys, the dry-run post, guard blocks, content brief, and dashboard on desktop and mobile.
+- **Verified here:** unit tests (24 passing; the OAuth signature matches X's published example), and an offline end-to-end run against live DexScreener and Jupiter data: genesis, discovery, policy rejections, paper buys, the dry-run post, guard blocks, content brief, and dashboard on desktop and mobile.
 - **Written but not yet run against the real services:** Claude calls (no key in the build environment), Jupiter live swaps, the PumpPortal fee claim, X posting and reading, and the Higgsfield request (its body shape is a placeholder; match it to the API you're given).
 
 ## Notes
