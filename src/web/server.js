@@ -12,7 +12,14 @@ import { lifeTier } from '../trading/treasury.js';
 import { heroMedia, galleryMedia, mood, nowLine } from './character.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const PAGE = path.join(here, 'index.html');
+// Public pages and shared assets. Anything not listed here is never served.
+const STATIC = {
+  '/': ['index.html', 'text/html; charset=utf-8'],
+  '/index.html': ['index.html', 'text/html; charset=utf-8'],
+  '/trading': ['trading.html', 'text/html; charset=utf-8'],
+  '/site.css': ['site.css', 'text/css; charset=utf-8'],
+  '/site.js': ['site.js', 'text/javascript; charset=utf-8'],
+};
 
 export function publicState() {
   const agent = load('agent');
@@ -35,9 +42,11 @@ export function publicState() {
     identity: agent.identity && {
       name: agent.identity.name, username: agent.identity.username, bio: agent.identity.bio, backstory: agent.identity.backstory,
       traits: agent.identity.personalityTraits, worldview: agent.identity.worldview, trading: agent.identity.trading,
+      age: agent.identity.age, humor: agent.identity.humorStyle, basedIn: agent.identity.basedIn, offTheCharts: agent.identity.offTheCharts, ambitions: agent.identity.ambitions, insecurities: agent.identity.insecurities,
     },
     coin: agent.coin && { name: agent.coin.name, ticker: agent.coin.ticker, concept: agent.coin.concept, lore: agent.coin.lore, address: agent.coin.address },
-    visual: agent.visual && { summary: agent.visual.summary, palette: agent.visual.colorPalette },
+    visual: agent.visual && { summary: agent.visual.summary, palette: agent.visual.colorPalette, setting: agent.visual.environmentByTier?.[tier] },
+    lastActiveAt: ledger[0]?.at || null,
     genesis: agent.genesis,
     wallet: walletAddress(),
     lifeTier: tier,
@@ -69,9 +78,10 @@ export function startServer(port = config.port) {
   const server = http.createServer((req, res) => {
     const url = new URL(req.url, 'http://x');
     try {
-      if (url.pathname === '/' || url.pathname === '/index.html') {
-        res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
-        return res.end(fs.readFileSync(PAGE));
+      const page = STATIC[url.pathname.replace(/\/$/, '') || '/'];
+      if (page) {
+        res.writeHead(200, { 'content-type': page[1], 'cache-control': 'no-cache' });
+        return res.end(fs.readFileSync(path.join(here, page[0])));
       }
       if (url.pathname.startsWith('/character/')) return sendMedia(res, decodeURIComponent(url.pathname.slice('/character/'.length)));
       if (url.pathname === '/api/state') return json(res, publicState());

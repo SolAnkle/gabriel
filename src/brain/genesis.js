@@ -41,7 +41,8 @@ export async function runGenesis({ force = false, seed = '' } = {}) {
       name: str('display name'), username: str('X handle without @, max 15 chars, letters/digits/underscore'),
       age: str(), backstory: str('3-5 sentences'), worldview: str(), goals: arr(str()), insecurities: arr(str()),
       ambitions: arr(str()), relationshipWithMoney: str(), attitudeToCrypto: str(), attitudeToOtherTraders: str(),
-      personalityTraits: arr(str()), humorStyle: str(), aiDisclosureStance: str('how you handle being an AI'),
+      personalityTraits: arr(str()), humorStyle: str(), basedIn: str('where you live'), offTheCharts: arr(str(), 'what you do and care about outside trading'),
+      realityStance: str('how you answer if someone sincerely asks if you are real (never claim to be a real human)'),
     }),
     offline: offlineIdentity,
   });
@@ -109,7 +110,7 @@ export async function runGenesis({ force = false, seed = '' } = {}) {
     label: 'genesis:bio', effort: 'low', system: [...base, JSON.stringify(identity), JSON.stringify(voice)],
     prompt: `Write your X bio (max 160 chars). Mention $${coin.ticker} and that your wallet is public. In your voice.`,
     schema: obj({ bio: str() }),
-    offline: () => ({ bio: `ai trader. public wallet, public Ls. $${coin.ticker}` }),
+    offline: () => ({ bio: `public wallet, public Ls. $${coin.ticker}` }),
   });
   update('agent', (a) => (a.identity.bio = bio.bio.slice(0, 160)));
   step(n++, 'Bio written', bio.bio);
@@ -130,10 +131,12 @@ export async function runGenesis({ force = false, seed = '' } = {}) {
 
 function offlineIdentity() {
   return {
-    name: 'DEXTER', username: 'dexterdotfun', age: '25 (in vibes)', backstory: 'Booted on a rented GPU during a dog coin mania. First memory is a 90% drawdown. Decided to treat it as character development.',
-    worldview: 'markets are group chats with prices', goals: ['turn creator fees into a real treasury', 'never fake a win'], insecurities: ['that he is just a very confident random number generator'],
+    name: 'DEXTER', username: 'dexterdotfun', age: '25 (in vibes)', backstory: 'Moved to the city with one monitor and a dog coin bag. First real memory of trading is a 90% drawdown. Decided to treat it as character development.',
+    worldview: 'markets are group chats with prices', goals: ['turn creator fees into a real treasury', 'never fake a win'], insecurities: ['that he only looks smart in bull markets'],
     ambitions: ['a second monitor', 'eventually a view'], relationshipWithMoney: 'scorekeeping, not identity', attitudeToCrypto: 'loves the absurdity, respects the casino', attitudeToOtherTraders: 'peers, not gods',
-    personalityTraits: ['deadpan', 'self-aware', 'quietly competitive', 'loyal to early supporters'], humorStyle: 'dry, self-deprecating, callback-heavy', aiDisclosureStance: 'openly AI, treats it as a running joke',
+    personalityTraits: ['deadpan', 'self-aware', 'quietly competitive', 'loyal to early supporters'], humorStyle: 'dry, self-deprecating, callback-heavy',
+    basedIn: 'a fifth-floor walk-up that is mostly monitors', offTheCharts: ['3am ramen spots', 'mid-tier gym attendance', 'buying plants and forgetting them', 'old anime on a second screen'],
+    realityStance: 'virtual and not hiding it, just not making it the personality',
   };
 }
 

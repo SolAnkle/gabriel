@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Trading</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Instrument+Serif:ital@0;1&family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<nav class="nav" aria-label="Main">
+  <div class="presence" id="presence"><i aria-hidden="true"></i><span>…</span></div>
+  <div class="handle" id="handle"></div>
+  <ul>
+    <li><a href="#treasury">Treasury</a></li>
+    <li><a href="#positions">Positions</a></li>
+    <li><a href="#results">Ws &amp; Ls</a></li>
+    <li><a href="#log">Log</a></li>
+    <li class="keep"><a class="cta" href="/">← Home</a></li>
+  </ul>
+</nav>
+
+<header class="deskhead">
+  <a class="back eyebrow" href="/">← <span id="back-name">Home</span></a>
+  <h1>The desk</h1>
+  <p id="desk-intro">Every buy, every sell, every W and every L, in public.</p>
+</header>
+
+<main>
+  <section class="chapter" id="treasury" style="padding-top:clamp(64px,8vw,120px)">
+    <div class="chapter-head reveal"><span class="no">01 / Treasury</span><h2>The <em>money</em></h2></div>
+    <div class="money-top reveal">
+      <div><div class="eyebrow">Total</div><div class="total" id="m-total">—</div></div>
+      <div class="chg"><div class="eyebrow">Last 24h</div><div class="v" id="m-chg">—</div></div>
+    </div>
+    <div class="chartwrap reveal" id="chartwrap"><svg id="chart" preserveAspectRatio="none" role="img" aria-label="Treasury over time"></svg><div class="tip" id="tip"></div></div>
+    <div class="split reveal" id="split"></div>
+    <p class="source reveal" id="source"></p>
+  </section>
+
+  <section class="chapter" id="positions">
+    <div class="chapter-head reveal"><span class="no">02 / Positions</span><h2>The <em>bag</em></h2></div>
+    <div class="rows" id="rows"></div>
+  </section>
+
+  <section class="chapter" id="results">
+    <div class="chapter-head reveal"><span class="no">03 / Results</span><h2>Ws, Ls &amp; <em>lessons</em></h2></div>
+    <div class="journal" id="journal"></div>
+  </section>
+
+  <section class="chapter" id="log">
+    <div class="chapter-head reveal"><span class="no">04 / Log</span><h2>Trade <em>log</em></h2></div>
+    <div class="terminal reveal">
+      <div class="bar"><span class="eyebrow">Live</span><span class="eyebrow">coins looked at, bought, sold, and passed on</span></div>
+      <div class="log" id="tlog"></div>
+    </div>
+  </section>
+
+  <section class="chapter" id="rules">
+    <div class="chapter-head reveal"><span class="no">05 / Risk</span><h2>His <em>rules</em></h2></div>
+    <div class="rules reveal" id="laws"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="meta"><span id="foot-disc"></span><span id="foot-wallet" class="mono"></span></div>
+  <div class="end" id="foot-name" aria-hidden="true"></div>
+</footer>
+
+<script src="/site.js"></script>
+<script>
+const TRADING_EVENTS = new Set(['analysis', 'policy', 'trade', 'fees']);
+const LABEL = { analysis: 'looked', policy: 'rules', trade: 'trade', fees: 'fees' };
+
+function logLine(e, fresh) {
+  const d = e.data || {};
+  const note = e.type === 'analysis' && d.thesis ? ` <i>“${esc(d.thesis)}”</i>` : '';
+  return `<div class="e ${esc(e.type)}${fresh ? ' new' : ''}"><span class="dim">${hms(e.at)}</span><span class="k">${LABEL[e.type]}</span><span class="s">${esc(e.summary)}${note}</span></div>`;
+}
+
+function render(s) {
+  const name = s.identity?.name || 'He';
+  document.title = `${name} · Trading`;
+  $('back-name').textContent = name;
+  $('desk-intro').textContent = `${name} trades memecoins with the creator fees from ${s.coin ? '$' + s.coin.ticker : 'his coin'}. Every buy, every sell, every W and every L, in public.`;
+
+  const t = s.treasury;
+  roll($('m-total'), t.total, 2);
+  const base = s.history.find((h) => Date.parse(h.at) >= Date.now() - 86400000);
+  const chg = base ? t.total / base.treasuryUsd - 1 : null;
+  $('m-chg').innerHTML = chg == null ? '—' : `<span class="${cls(chg)}">${pct(chg)}</span>`;
+  const parts = [['In coins', t.portfolio], ['Free to trade', t.available], ['Reserve', t.reserve], ['Operations', t.operations]];
+  const total = Math.max(1, t.total);
+  $('split').innerHTML = parts.map(([k, v]) => `<div><div class="eyebrow">${k}</div><div class="v">${usd(v)}</div><div class="bar"><i style="width:${Math.max(0, Math.min(100, v / total * 100))}%"></i></div></div>`).join('');
+  $('source').innerHTML = `It all started with <b>${s.coin ? '$' + esc(s.coin.ticker) : 'his coin'}</b> creator fees: ${usd(t.feesEarned)} so far. Most of it stays in reserve. Only the trading slice ever gets bet.`;
+  drawChart(s.history);
+
+  $('rows').innerHTML = s.positions.length
+    ? s.positions.map((p, i) => `<a class="row reveal" href="${esc(p.url)}" target="_blank" rel="noopener">
+        <span class="i">${String(i + 1).padStart(2, '0')}</span><span class="sym">$${esc(p.symbol)}</span>
+        <span class="why">“${esc(p.thesis)}”</span>
+        <span class="amt">${usd(p.invested)} → ${usd(p.value)}<br>opened ${ago(p.openedAt)}</span>
+        <span class="pnl ${cls(p.pnlPct)}">${pct(p.pnlPct)}</span></a>`).join('')
+    : '<p class="none">Holding nothing. Cash is a position too.</p>';
+
+  const pages = s.closed.map((c) => ({ at: c.closedAt, k: c.pnlPct >= 0 ? 'w' : 'l', stamp: `${c.pnlPct >= 0 ? 'W' : 'L'} ${pct(c.pnlPct)}`, h: `$${c.symbol}: ${usd(c.invested)} in, ${usd(c.returned)} out`, p: c.postMortem || c.exitReason, small: `Bought because “${c.thesis}”` }))
+    .sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+  $('journal').innerHTML = pages.length
+    ? pages.map((e) => `<article class="page reveal"><div class="date"><span class="stamp ${e.k}">${esc(e.stamp)}</span><span class="eyebrow">${stamp(e.at)}</span></div><h3>${esc(e.h)}</h3><p>${esc(e.p)}</p><small>${esc(e.small)}</small></article>`).join('')
+    : '<p class="none">Nothing closed yet. Ls get posted here too.</p>';
+
+  const p = s.policy;
+  const laws = [
+    ['Largest single bet', `${usd(p.maxTradeUsd)} · ${p.maxTradePctOfTreasury * 100}% of treasury`], ['Largest position', `${p.maxPositionPctOfTreasury * 100}% of treasury`],
+    ['Reserve he never touches', `${p.buckets.reserve * 100}%`], ['Minimum liquidity', usd(p.minLiquidityUsd)],
+    ['Stop loss', `${p.stopLossPct * 100}%`], ['Bets per day', p.maxTradesPerDay],
+    ['Posts about a coin he holds', 'always disclosed'], ['After posting about a coin', `no selling for profit for ${p.mentionLockHours}h`],
+  ];
+  $('laws').innerHTML = laws.map(([k, v]) => `<div class="law"><span>${k}</span><span>${esc(v)}</span></div>`).join('');
+}
+
+fitters.push(() => {
+  const pad = parseFloat(getComputedStyle(document.querySelector('.nav')).paddingLeft) || 16;
+  fit($('foot-name'), (document.documentElement.clientWidth - 2 * pad) * .97);
+});
+addEventListener('resize', () => Site.state && drawChart(Site.state.history));
+
+(async () => {
+  await Site.start(render, (e) => { if (TRADING_EVENTS.has(e.type)) $('tlog').insertAdjacentHTML('afterbegin', logLine(e, true)); });
+  const ledger = await fetch('/api/ledger?limit=300').then((r) => r.json());
+  const rows = ledger.filter((e) => TRADING_EVENTS.has(e.type));
+  $('tlog').innerHTML = rows.map((e) => logLine(e)).join('') || '<div class="dim">Nothing yet.</div>';
+})();
+</script>
+</body>
+</html>

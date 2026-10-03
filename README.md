@@ -82,13 +82,12 @@ Other commands:
 
 ## The website
 
-The site is art-directed as a live broadcast of an experiment, with him as the subject. It isn't a trading dashboard.
+The site is about **him**, not his trading. Two pages, one look:
 
-- **Hero:** your Higgsfield render stands centre stage, with his name as a masthead behind him (sized to fit the screen for any name). His head crosses in front of it, magazine-cover style. Light follows the mouse and changes colour with his mood. Film grain sits over everything. A live clock counts the experiment's days since genesis.
-- **His voice:** his latest post types itself out beside his head, with the holding disclosure underneath. His current action runs along the bottom like a film subtitle ("DEXTER is looking at $XYZ…").
-- **Chapters:** Subject · Treasury (full-width interactive chart) · The bag (his thesis for each coin) · Ws, Ls & lessons (stamped journal) · He said · His life follows the wallet · Watch him think (live log) · He made himself (genesis replays as a boot log) and the rules he can't break.
-- **Typography:** Archivo Expanded Black for display, Instrument Serif Italic for his voice, Geist and Geist Mono for UI and numbers. One accent colour, taken from the palette he chose at genesis.
-- **Accessibility:** respects reduced-motion settings, and was checked at phone width with no horizontal scroll.
+- **`/` (home): the character.** Your Higgsfield render stands centre stage in front of his name as a masthead, with mood-coloured light, film grain and a slight mouse parallax. Around him: an online / last-seen dot, his latest post (typed out, holding disclosure underneath), his mood, where he is right now, and his current action as a film subtitle. Below that: **About** (story, age, where he lives, what he believes, wants and secretly worries about, what he does off the charts), **Life** (the Higgsfield photo and video reel, plus which era of his life he's in), **Lately** (his posts and his people) and **His coin**. Trading appears only as one band near the end that links to the desk.
+- **`/trading`: the desk.** Treasury and chart, positions with his thesis for each, Ws and Ls with post-mortems, a live trade log, and his risk rules.
+
+He's presented as a person living his life, not as an AI project: no "experiment", agent log or "he made himself" framing anywhere. One footer line says he's a virtual character made with Higgsfield and runs automatically, and posts about coins he holds keep their disclosure. Keep both: they're what stop the account being misleading to people who might buy his coin. His prompts tell him to stay in character, never talk about models or prompts, never claim to be a real human, and say he's virtual if someone sincerely asks.
 
 **Put the character in:** drop Higgsfield renders into `data/character/` (see `data/character/README.md`). `hero.png` (ideally a transparent cut-out) or `hero.mp4` becomes the centre figure. `hero-broke.png` … `hero-rich.png` swap automatically as his life tier changes. Any other file shows in the life gallery. Until then, a placeholder silhouette holds his spot.
 

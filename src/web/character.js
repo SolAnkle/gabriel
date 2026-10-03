@@ -85,10 +85,10 @@ export function nowLine(e) {
     case 'policy': return d.violations ? `wanted $${d.token}. the rules said no` : `got the green light on $${d.token}`;
     case 'social': return d.action === 'REPLY' ? `replying to @${d.target}` : d.action === 'QUOTE' ? `quoting @${d.target}` : 'posting';
     case 'ignore': return 'chose violence (silence)';
-    case 'reflection': return 'staring at his own timeline';
+    case 'reflection': return 'rereading his old posts';
     case 'content': return 'getting his picture taken';
     case 'fees': return 'counting creator fees';
-    case 'genesis': return 'being born';
+    case 'genesis': return null;
     case 'guard': return 'deleted a draft';
     default: return null;
   }
