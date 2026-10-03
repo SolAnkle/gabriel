@@ -1,0 +1,25 @@
+{
+  "name": "autonomous-memecoin-agent",
+  "version": "0.1.0",
+  "description": "An observable autonomous memecoin trader/influencer: genesis, memory, research, deterministic risk rules, X agent and a public dashboard.",
+  "type": "module",
+  "main": "src/cli.js",
+  "scripts": {
+    "genesis": "node src/cli.js genesis",
+    "ingest-kols": "node src/cli.js ingest-kols",
+    "tick": "node src/cli.js tick",
+    "reflect": "node src/cli.js reflect",
+    "serve": "node src/cli.js serve",
+    "start": "node src/cli.js run",
+    "test": "STATE_DIR=./state-test node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
+    "@solana/web3.js": "^1.99.0",
+    "bs58": "^6.0.0",
+    "dotenv": "^18.0.5"
+  }
+}

@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f6f3; --panel: #ffffff; --line: #e3e3dd; --text: #141414; --muted: #6b6b66;
+    --accent: #3a7d00; --up: #1f8a3b; --down: #c9283e; --chip: #efefe9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b0b0c; --panel: #131315; --line: #26262a; --text: #ececea; --muted: #8b8b90;
+      --accent: #b6ff3b; --up: #4ade80; --down: #ff5c74; --chip: #1c1c20;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b0b0c; --panel: #131315; --line: #26262a; --text: #ececea; --muted: #8b8b90;
+    --accent: #b6ff3b; --up: #4ade80; --down: #ff5c74; --chip: #1c1c20;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 Inter, system-ui, sans-serif; }
+  .mono, .num { font-family: "JetBrains Mono", ui-monospace, monospace; }
+  .num { font-variant-numeric: tabular-nums; }
+  main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 64px; }
+  header { display: flex; flex-wrap: wrap; gap: 16px; align-items: end; justify-content: space-between; margin-bottom: 20px; }
+  h1 { font-size: clamp(32px, 7vw, 56px); font-weight: 800; letter-spacing: -0.03em; margin: 0; line-height: 1; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin: 0 0 12px; font-weight: 600; }
+  .sub { color: var(--muted); margin-top: 6px; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { background: var(--chip); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; font-size: 12px; }
+  .chip.warn { color: var(--accent); border-color: var(--accent); }
+  .grid { display: grid; gap: 14px; }
+  .stats { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); margin-bottom: 14px; }
+  .two { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
+  @media (max-width: 860px) { .two { grid-template-columns: minmax(0, 1fr); } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; min-width: 0; }
+  .stat .label { font-size: 12px; color: var(--muted); }
+  .stat .value { font-size: 24px; font-weight: 600; margin-top: 2px; }
+  .feed { max-height: 560px; overflow-y: auto; }
+  .ev { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .ev:last-child { border-bottom: 0; }
+  .ev time { color: var(--muted); font-size: 12px; padding-top: 2px; }
+  .ev .type { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  .ev.trade .type, .ev.genesis .type { color: var(--accent); }
+  .ev.error .type, .ev.guard .type { color: var(--down); }
+  .ev .body { overflow-wrap: anywhere; }
+  .ev .scores { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .ev.new { animation: flash 1.2s ease-out; }
+  @keyframes flash { from { background: color-mix(in srgb, var(--accent) 18%, transparent); } to { background: transparent; } }
+  .genesis ol { list-style: none; padding: 0; margin: 0; counter-reset: g; }
+  .genesis li { padding: 6px 0; border-bottom: 1px dashed var(--line); display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 8px; }
+  .genesis li span:first-child { color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-weight: 600; color: var(--muted); font-size: 12px; padding: 6px 8px 6px 0; }
+  td { padding: 8px 8px 8px 0; border-top: 1px solid var(--line); vertical-align: top; }
+  td.r, th.r { text-align: right; }
+  .up { color: var(--up); } .down { color: var(--down); }
+  .card { border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+  .card .head { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; }
+  .quote { font-size: 17px; margin: 6px 0 0; }
+  .quote::before { content: "“"; } .quote::after { content: "”"; }
+  .muted { color: var(--muted); }
+  .scroll-x { overflow-x: auto; }
+  svg.chart { width: 100%; height: 120px; display: block; }
+  a { color: inherit; }
+  .empty { color: var(--muted); font-style: italic; }
+  .section { margin-top: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1 id="name">…</h1>
+      <div class="sub" id="tagline">Autonomous memecoin trader</div>
+      <div class="sub" id="bio"></div>
+    </div>
+    <div class="chips" id="modes"></div>
+  </header>
+
+  <section class="grid stats" id="stats"></section>
+
+  <section class="panel section">
+    <h2>Treasury</h2>
+    <svg class="chart" id="chart" viewBox="0 0 600 120" preserveAspectRatio="none" role="img" aria-label="Treasury over time"></svg>
+    <div class="muted mono" id="wallet" style="font-size:12px;margin-top:6px;overflow-wrap:anywhere"></div>
+  </section>
+
+  <section class="grid two section">
+    <div class="panel">
+      <h2>Live agent activity</h2>
+      <div class="feed" id="feed"></div>
+    </div>
+    <div class="grid" style="align-content:start">
+      <div class="panel">
+        <h2>Why I bought</h2>
+        <div id="why"></div>
+      </div>
+      <div class="panel genesis">
+        <h2>Genesis</h2>
+        <ol id="genesis"></ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel section">
+    <h2>Open positions</h2>
+    <div class="scroll-x"><table id="positions"></table></div>
+  </section>
+
+  <section class="panel section">
+    <h2>Closed trades (wins and losses)</h2>
+    <div class="scroll-x"><table id="closed"></table></div>
+  </section>
+
+  <section class="grid two section">
+    <div class="panel">
+      <h2>Posts</h2>
+      <div id="posts"></div>
+    </div>
+    <div class="grid" style="align-content:start">
+      <div class="panel">
+        <h2>Life</h2>
+        <div id="scenes"></div>
+      </div>
+      <div class="panel">
+        <h2>Relationships</h2>
+        <div id="people"></div>
+      </div>
+      <div class="panel">
+        <h2>Latest self-reflection</h2>
+        <div id="reflection"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const usd = (n) => n == null || !isFinite(n) ? '—' : (Math.abs(n) >= 1000 ? '$' + Math.round(n).toLocaleString('en-US') : '$' + n.toFixed(2));
+const pct = (n) => n == null || !isFinite(n) ? '—' : `${n >= 0 ? '+' : ''}${(n * 100).toFixed(0)}%`;
+const cls = (n) => (n >= 0 ? 'up' : 'down');
+const hhmm = (iso) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+function renderState(s) {
+  const name = s.identity?.name || 'Unborn agent';
+  document.title = `${name} · Agent Dashboard`;
+  $('name').textContent = name;
+  $('tagline').textContent = s.identity ? `@${s.identity.username} · Autonomous memecoin trader · life tier: ${s.lifeTier}` : 'Waiting for genesis';
+  $('bio').textContent = s.identity?.bio || '';
+  $('modes').innerHTML = [
+    `<span class="chip ${s.modes.trading === 'paper' ? 'warn' : ''}">${s.modes.trading === 'paper' ? 'PAPER TRADING' : 'LIVE TRADING'}</span>`,
+    `<span class="chip ${s.modes.x !== 'live' ? 'warn' : ''}">X ${s.modes.x.toUpperCase()}</span>`,
+    s.modes.llm === 'offline' ? '<span class="chip warn">SCRIPTED BRAIN</span>' : '',
+    s.coin ? `<span class="chip">$${esc(s.coin.ticker)}</span>` : '',
+  ].join('');
+
+  const t = s.treasury;
+  const tiles = [
+    ['Treasury', usd(t.total)], ['Portfolio', usd(t.portfolio)], ['Available capital', usd(t.available)],
+    ['Reserve', usd(t.reserve)], ['Creator fees earned', usd(t.feesEarned)], ['Token', s.coin ? `$${esc(s.coin.ticker)}` : '—'],
+  ];
+  $('stats').innerHTML = tiles.map(([l, v]) => `<div class="panel stat"><div class="label">${l}</div><div class="value num">${v}</div></div>`).join('');
+  $('wallet').textContent = `Public wallet: ${s.wallet}${s.coin?.address ? ` · coin: ${s.coin.address}` : ''}`;
+
+  drawChart(s.history);
+
+  $('genesis').innerHTML = s.genesis.length
+    ? s.genesis.map((g) => `<li><span class="mono">Step ${String(g.step).padStart(2, '0')}</span><span>${esc(g.title)}${g.detail ? `: <span class="muted">${esc(g.detail)}</span>` : ''}</span></li>`).join('')
+    : '<li class="empty">not started</li>';
+
+  $('why').innerHTML = s.positions.length
+    ? s.positions.slice(0, 4).map((p) => `<div class="card"><div class="head"><span>$${esc(p.symbol)}</span><span class="num ${cls(p.pnlPct)}">${pct(p.pnlPct)}</span></div><p class="quote">${esc(p.thesis)}</p></div>`).join('')
+    : '<p class="empty">No open positions. Cash is a position too.</p>';
+
+  $('positions').innerHTML = s.positions.length
+    ? `<tr><th>Token</th><th class="r">Invested</th><th class="r">Current</th><th class="r">PnL</th><th>Reason</th></tr>` +
+      s.positions.map((p) => `<tr><td><a href="${esc(p.url)}" target="_blank" rel="noopener">$${esc(p.symbol)}</a></td><td class="r num">${usd(p.invested)}</td><td class="r num">${usd(p.value)}</td><td class="r num ${cls(p.pnlPct)}">${pct(p.pnlPct)}</td><td>${esc(p.thesis)}</td></tr>`).join('')
+    : '<tr><td class="empty">None</td></tr>';
+
+  $('closed').innerHTML = s.closed.length
+    ? `<tr><th>Token</th><th class="r">In</th><th class="r">Out</th><th class="r">PnL</th><th>What happened</th></tr>` +
+      s.closed.map((c) => `<tr><td>$${esc(c.symbol)}</td><td class="r num">${usd(c.invested)}</td><td class="r num">${usd(c.returned)}</td><td class="r num ${cls(c.pnlPct)}">${pct(c.pnlPct)}</td><td>${esc(c.postMortem || c.exitReason)}<div class="muted" style="font-size:12px">${esc(c.exitReason)}</div></td></tr>`).join('')
+    : '<tr><td class="empty">No closed trades yet</td></tr>';
+
+  $('posts').innerHTML = s.posts.length
+    ? s.posts.map((p) => `<div class="card"><div class="head"><span class="muted" style="font-weight:400">${p.action === 'POST' ? 'post' : p.action.toLowerCase() + ' → @' + esc(p.target)}${p.dryRun ? ' · dry-run' : ''}</span><span class="muted" style="font-weight:400">${hhmm(p.at)}</span></div><div style="white-space:pre-wrap;margin-top:4px">${esc(p.text)}</div>${p.url ? `<a class="muted" href="${esc(p.url)}" target="_blank" rel="noopener" style="font-size:12px">view on X</a>` : ''}</div>`).join('')
+    : '<p class="empty">Hasn\'t said anything yet.</p>';
+
+  $('scenes').innerHTML = s.scenes.length
+    ? s.scenes.slice(0, 3).map((c) => `<div class="card">${c.mediaUrl ? `<img src="${esc(c.mediaUrl)}" alt="" style="width:100%;border-radius:8px">` : ''}<div class="muted" style="font-size:12px">${esc(c.tier)} · ${esc(c.trigger.kind)} · ${esc(c.status)}</div><p class="quote">${esc(c.caption)}</p><div class="muted" style="font-size:13px">${esc(c.scene)}</div></div>`).join('')
+    : '<p class="empty">No scenes yet.</p>';
+
+  $('people').innerHTML = s.relationships.length
+    ? `<table>${s.relationships.map((p) => `<tr><td>@${esc(p.handle)}</td><td class="muted">${esc(p.tags.join(', '))}</td><td class="r num ${cls(p.sentiment)}">${p.sentiment > 0 ? '+' : ''}${p.sentiment}</td></tr>`).join('')}</table>`
+    : '<p class="empty">No one yet.</p>';
+
+  $('reflection').innerHTML = s.lastReflection
+    ? `<p class="quote">${esc(s.lastReflection.summary)}</p>${(s.lastReflection.data.styleAdjustments || []).map((a) => `<div class="muted">· ${esc(a)}</div>`).join('')}`
+    : '<p class="empty">Hasn\'t looked in the mirror yet.</p>';
+}
+
+function drawChart(history) {
+  const svg = $('chart');
+  if (history.length < 2) { svg.innerHTML = '<text x="0" y="60" fill="currentColor" opacity=".5" font-size="12">not enough history yet</text>'; return; }
+  const ys = history.map((h) => h.treasuryUsd);
+  const min = Math.min(...ys), max = Math.max(...ys), span = max - min || 1;
+  const pts = ys.map((y, i) => `${(i / (ys.length - 1)) * 600},${110 - ((y - min) / span) * 100}`);
+  const up = ys.at(-1) >= ys[0];
+  svg.innerHTML = `<polyline points="${pts.join(' ')}" fill="none" stroke="var(${up ? '--up' : '--down'})" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
+}
+
+function evHtml(e, isNew) {
+  const d = e.data || {};
+  const scores = d.scores ? `<div class="scores">${Object.entries(d.scores).map(([k, v]) => `<span class="chip">${esc(k)}: ${esc(v)}</span>`).join('')}</div>` : '';
+  const thesis = d.thesis && e.type === 'analysis' ? `<div class="muted">“${esc(d.thesis)}”</div>` : '';
+  const why = d.why ? `<div class="muted" style="font-size:13px">why: ${esc(d.why)}</div>` : '';
+  return `<div class="ev ${esc(e.type)}${isNew ? ' new' : ''}"><time class="mono">${hhmm(e.at)}</time><div><div class="type">${esc(e.type)}</div><div class="body">${esc(e.summary)}</div>${thesis}${scores}${why}</div></div>`;
+}
+
+async function load() {
+  const [state, ledger] = await Promise.all([fetch('/api/state').then((r) => r.json()), fetch('/api/ledger?limit=150').then((r) => r.json())]);
+  renderState(state);
+  $('feed').innerHTML = ledger.length ? ledger.map((e) => evHtml(e)).join('') : '<p class="empty">Nothing yet.</p>';
+}
+
+load();
+setInterval(load, 30_000);
+const es = new EventSource('/api/events');
+let refresh;
+es.onmessage = (m) => {
+  const e = JSON.parse(m.data);
+  $('feed').insertAdjacentHTML('afterbegin', evHtml(e, true));
+  clearTimeout(refresh);
+  refresh = setTimeout(() => fetch('/api/state').then((r) => r.json()).then(renderState), 1000);
+};
+</script>
+</body>
+</html>
