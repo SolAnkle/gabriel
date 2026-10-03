@@ -30,6 +30,7 @@ export function publicState() {
     mood: mood({ status: agent.status, tier, snapshots: pf.snapshots, closed: pf.closed, lastEvent: ledger[0] }),
     now: nowEvent ? { line: nowLine(nowEvent), at: nowEvent.at } : null,
     status: agent.status,
+    bornAt: agent.createdAt,
     modes: { trading: config.tradingMode, x: config.xMode, llm: config.llmEnabled ? 'live' : 'offline' },
     identity: agent.identity && {
       name: agent.identity.name, username: agent.identity.username, bio: agent.identity.bio, backstory: agent.identity.backstory,

@@ -82,7 +82,13 @@ Other commands:
 
 ## The website
 
-The site is built around the character, not a trading terminal. The intro is a full-screen room: the Higgsfield render stands large in the centre with his name in giant letters behind him. Around him are his latest post as a speech bubble and his mood, which code derives from the wallet ("up bad", "in shambles", "locked in", "eating noodles"...) and which also tints the room's light. A live line at the bottom shows what he's doing right now. Scrolling down leads through his life: who he is and the coin he made, his wallet and bag (each coin with his own thesis), his diary of wins and losses, things he said, the people he knows, his life tier and scenes, a live feed of his thinking, how he was born, and the rules he can't break.
+The site is art-directed as a live broadcast of an experiment, with him as the subject. It isn't a trading dashboard.
+
+- **Hero:** your Higgsfield render stands centre stage, with his name as a masthead behind him (sized to fit the screen for any name). His head crosses in front of it, magazine-cover style. Light follows the mouse and changes colour with his mood. Film grain sits over everything. A live clock counts the experiment's days since genesis.
+- **His voice:** his latest post types itself out beside his head, with the holding disclosure underneath. His current action runs along the bottom like a film subtitle ("DEXTER is looking at $XYZ…").
+- **Chapters:** Subject · Treasury (full-width interactive chart) · The bag (his thesis for each coin) · Ws, Ls & lessons (stamped journal) · He said · His life follows the wallet · Watch him think (live log) · He made himself (genesis replays as a boot log) and the rules he can't break.
+- **Typography:** Archivo Expanded Black for display, Instrument Serif Italic for his voice, Geist and Geist Mono for UI and numbers. One accent colour, taken from the palette he chose at genesis.
+- **Accessibility:** respects reduced-motion settings, and was checked at phone width with no horizontal scroll.
 
 **Put the character in:** drop Higgsfield renders into `data/character/` (see `data/character/README.md`). `hero.png` (ideally a transparent cut-out) or `hero.mp4` becomes the centre figure. `hero-broke.png` … `hero-rich.png` swap automatically as his life tier changes. Any other file shows in the life gallery. Until then, a placeholder silhouette holds his spot.
 
