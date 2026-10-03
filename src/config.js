@@ -1,5 +1,5 @@
 // All settings come from the environment. Everything that can lose money or speak in public
-// is OFF by default: the agent paper-trades and writes posts to the ledger instead of X.
+// is OFF by default: the agent paper-trades and writes posts to the log instead of X.
 import 'dotenv/config';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -11,10 +11,6 @@ const bool = (v, d = false) => (v == null || v === '' ? d : /^(1|true|yes|on)$/i
 export const config = {
   stateDir: process.env.STATE_DIR || path.join(here, '..', 'state'),
   kolDir: process.env.KOL_DIR || path.join(here, '..', 'data', 'kols'),
-  // Higgsfield renders of the character for the website (hero.png, hero-<tier>.png, extra shots).
-  characterDir: process.env.CHARACTER_DIR || path.join(here, '..', 'data', 'character'),
-  characterHeroUrl: process.env.CHARACTER_HERO_URL || '',
-  port: num(process.env.PORT, 8787),
 
   // --- LLM ---
   model: process.env.AGENT_MODEL || 'claude-opus-5-5',
@@ -30,6 +26,41 @@ export const config = {
   walletSecretKey: process.env.AGENT_WALLET_SECRET_KEY || '', // base58, live mode only
   publicWalletAddress: process.env.AGENT_WALLET_ADDRESS || '',
   paperStartingTreasuryUsd: num(process.env.PAPER_STARTING_TREASURY_USD, 10_000),
+
+  // --- Live execution ---
+  execution: {
+    // SOL always left in the wallet for transaction fees; buys can never dip into it.
+    minSolReserve: num(process.env.MIN_SOL_RESERVE, 0.05),
+    // Jupiter priority fee: level + cap per transaction (lamports).
+    priorityLevel: process.env.PRIORITY_LEVEL || 'high', // medium | high | veryHigh
+    maxPriorityFeeLamports: num(process.env.MAX_PRIORITY_FEE_LAMPORTS, 2_000_000),
+    // PumpPortal fallback priority fee (SOL) for coins still on the pump.fun bonding curve.
+    pumpPortalPriorityFeeSol: num(process.env.PUMPPORTAL_PRIORITY_FEE_SOL, 0.0005),
+    swapAttempts: num(process.env.SWAP_ATTEMPTS, 3),
+    confirmTimeoutSec: num(process.env.CONFIRM_TIMEOUT_SEC, 60),
+  },
+
+  // --- Creator fees ---
+  fees: {
+    claim: bool(process.env.CLAIM_CREATOR_FEES),
+    // Skip claims smaller than this, so transaction fees don't eat them.
+    minClaimSol: num(process.env.MIN_CLAIM_SOL, 0.05),
+    // Claim at most this often even when the pending balance can't be read.
+    claimIntervalHours: num(process.env.CLAIM_INTERVAL_HOURS, 6),
+  },
+
+  // --- Profit sweep: SOL above the threshold goes to a cold wallet ---
+  sweep: {
+    toAddress: process.env.SWEEP_TO_ADDRESS || '',
+    aboveSol: num(process.env.SWEEP_ABOVE_SOL, 0),
+  },
+
+  // --- Alerts (any or both) ---
+  alerts: {
+    telegramBotToken: process.env.TELEGRAM_BOT_TOKEN || '',
+    telegramChatId: process.env.TELEGRAM_CHAT_ID || '',
+    discordWebhookUrl: process.env.DISCORD_WEBHOOK_URL || '',
+  },
 
   // --- Portfolio policy (deterministic; the LLM can never change these) ---
   policy: {
@@ -54,7 +85,7 @@ export const config = {
     takeProfitPct: num(process.env.TAKE_PROFIT_PCT, 2),
     takeProfitSellFraction: num(process.env.TAKE_PROFIT_SELL_FRACTION, 0.5),
     maxHoldHours: num(process.env.MAX_HOLD_HOURS, 72),
-    // After posting about a token it holds, the agent can't take profit on it for this long.
+    // After posting about a token it holds, the agent can't sell it in profit for this long.
     mentionLockHours: num(process.env.MENTION_LOCK_HOURS, 24),
     dailyLossLimitPct: num(process.env.DAILY_LOSS_LIMIT_PCT, 0.1),
     maxTradesPerDay: num(process.env.MAX_TRADES_PER_DAY, 6),
@@ -64,7 +95,7 @@ export const config = {
   },
 
   // --- X / Twitter ---
-  // dry-run: posts are generated, checked and logged to the public ledger but not sent.
+  // dry-run: posts are generated, checked and logged to the activity log but not sent.
   xMode: process.env.X_MODE === 'live' ? 'live' : 'dry-run',
   x: {
     apiKey: process.env.X_API_KEY || '',
@@ -83,20 +114,13 @@ export const config = {
     maxSimilarityToRecent: num(process.env.MAX_SIMILARITY_TO_RECENT, 0.6),
   },
 
-  // --- Content (Higgsfield) ---
-  higgsfield: {
-    apiKey: process.env.HIGGSFIELD_API_KEY || '',
-    characterId: process.env.HIGGSFIELD_CHARACTER_ID || '',
-    // Higgsfield's API surface changes; set the endpoint you were given. Unset = briefs are queued only.
-    endpoint: process.env.HIGGSFIELD_ENDPOINT || '',
-  },
-
   // --- Loop cadence (minutes) ---
   cadence: {
     market: num(process.env.MARKET_TICK_MINUTES, 10),
     social: num(process.env.SOCIAL_TICK_MINUTES, 15),
     reflection: num(process.env.REFLECTION_TICK_MINUTES, 24 * 60),
-    content: num(process.env.CONTENT_TICK_MINUTES, 6 * 60),
+    // How often the brain re-reads each open position's thesis and may sell early.
+    exitReview: num(process.env.EXIT_REVIEW_MINUTES, 6 * 60),
   },
 };
 

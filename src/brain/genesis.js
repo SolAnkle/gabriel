@@ -145,7 +145,7 @@ person's history. Each moment gets a short "when" (like "2021" or "the winter be
     creditCreatorFees(config.paperStartingTreasuryUsd, 'simulated creator fees (paper mode)');
   }
 
-  step(n++, 'X account activated', config.xMode === 'live' ? `@${identity.username}` : `@${identity.username} (dry-run: posts go to the ledger only)`);
+  step(n++, 'X account activated', config.xMode === 'live' ? `@${identity.username}` : `@${identity.username} (dry-run: posts go to the log only)`);
   update('agent', (a) => (a.status = 'online'));
   step(n++, 'Agent online', null);
   return load('agent');

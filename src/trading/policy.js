@@ -125,3 +125,18 @@ export function checkQuote(quote, policy) {
   if (impactPct > policy.maxPriceImpactPct) return { ok: false, reason: `price impact ${impactPct.toFixed(2)}% > ${policy.maxPriceImpactPct}%` };
   return { ok: true };
 }
+
+/**
+ * May the brain sell this position early on its own judgement? Cutting a loser is always allowed;
+ * selling in profit is blocked while the post-about-it lock is active (no shill-and-dump).
+ */
+export function checkDiscretionarySell(position, policy, now = Date.now()) {
+  const price = position.lastPrice;
+  if (!(price > 0)) return { ok: false, reason: 'no current price' };
+  const pnl = price / position.entryPrice - 1;
+  const mentionedH = position.lastMentionedAt ? (now - Date.parse(position.lastMentionedAt)) / 3_600_000 : Infinity;
+  if (pnl > 0 && mentionedH < (policy.mentionLockHours ?? 24)) {
+    return { ok: false, reason: `posted about it ${Math.round(mentionedH)}h ago; can't sell in profit for ${policy.mentionLockHours}h` };
+  }
+  return { ok: true };
+}

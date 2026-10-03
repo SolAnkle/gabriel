@@ -1,0 +1,9 @@
+services:
+  agent:
+    build: .
+    env_file: .env
+    restart: unless-stopped
+    volumes:
+      - agent-state:/data/state
+volumes:
+  agent-state:

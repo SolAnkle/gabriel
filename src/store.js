@@ -1,9 +1,9 @@
-// Persistent state as plain JSON files (atomic writes), plus an append-only public ledger.
+// Persistent state as plain JSON files (atomic writes), plus an append-only activity log.
 // Small enough for one agent; swap for a database when it outgrows a single process.
 import fs from 'node:fs';
 import path from 'node:path';
-import { EventEmitter } from 'node:events';
 import { config } from './config.js';
+import { alert, ALERT_TYPES } from './alerts.js';
 
 const DEFAULTS = {
   agent: () => ({ status: 'unborn', identity: null, voice: null, coin: null, visual: null, genesis: [], createdAt: null }),
@@ -25,12 +25,9 @@ const DEFAULTS = {
   }),
   social: () => ({ posts: [], queue: [], seenTweetIds: [], decisions: [], lastMentionId: null, lastWatchedId: null }),
   research: () => ({ history: {}, reports: [] }),
-  content: () => ({ briefs: [] }),
   kols: () => ({ analyzedAt: null, accounts: [], blend: null, signatures: [], synthesis: null }),
 };
 
-const bus = new EventEmitter();
-bus.setMaxListeners(100);
 const cache = new Map();
 
 function file(name) {
@@ -73,9 +70,9 @@ export function resetCache() {
   cache.clear();
 }
 
-// ---------- Public activity ledger ----------
-// Everything the dashboard shows comes from here. Only public explanations go in: never raw
-// model reasoning, prompts, or secrets.
+// ---------- Activity ledger ----------
+// An append-only log of everything the agent does (state/ledger.jsonl). Short summaries only:
+// never raw model reasoning, prompts, or secrets. Important events are also pushed as alerts.
 
 const ledgerFile = () => path.join(config.stateDir, 'ledger.jsonl');
 
@@ -83,7 +80,7 @@ export function record(type, summary, data = {}) {
   fs.mkdirSync(config.stateDir, { recursive: true });
   const event = { id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`, at: new Date().toISOString(), type, summary, data };
   fs.appendFileSync(ledgerFile(), JSON.stringify(event) + '\n');
-  bus.emit('event', event);
+  if (ALERT_TYPES.has(type)) alert(`${type.toUpperCase()}: ${summary}`).catch(() => {});
   console.log(`[${event.at.slice(11, 19)}] ${type.padEnd(10)} ${summary}`);
   return event;
 }
@@ -96,9 +93,4 @@ export function readLedger(limit = 200) {
     if (err.code === 'ENOENT') return [];
     throw err;
   }
-}
-
-export function onLedgerEvent(fn) {
-  bus.on('event', fn);
-  return () => bus.off('event', fn);
 }

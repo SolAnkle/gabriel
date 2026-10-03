@@ -1,5 +1,5 @@
 // Minimal X API v2 client. Writes use OAuth 1.0a user context; reads use the app bearer token.
-// In dry-run mode nothing is sent: posts get a fake id and live only on the public ledger.
+// In dry-run mode nothing is sent: posts get a fake id and live only in the activity log.
 import crypto from 'node:crypto';
 import { config } from '../config.js';
 

@@ -2,7 +2,6 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { stylometrics, signaturePhrases, similarity, blendStylometrics } from '../src/brain/style.js';
 import { repetitionReport } from '../src/brain/reflection.js';
-import { contentTrigger } from '../src/content/engine.js';
 import { metrics } from '../src/trading/research.js';
 import { oauthHeader } from '../src/social/x.js';
 
@@ -36,12 +35,6 @@ test('repetition report spots repeated openers and duplicates', () => {
   assert.equal(r.nearDuplicatePairs, 1);
 });
 
-test('content triggers follow the wallet', () => {
-  const now = Date.now();
-  assert.equal(contentTrigger({ tier: 'broke', lastTier: 'surviving', treasury: 1, lastTreasury: 1, now }).kind, 'tier-change');
-  assert.equal(contentTrigger({ tier: 'x', lastTier: 'x', treasury: 60, lastTreasury: 100, lastBriefAt: new Date(now).toISOString(), now }).kind, 'drawdown');
-  assert.equal(contentTrigger({ tier: 'x', lastTier: 'x', treasury: 100, lastTreasury: 100, lastBriefAt: new Date(now).toISOString(), now }), null);
-});
 
 test('research metrics detect acceleration', () => {
   const s = {

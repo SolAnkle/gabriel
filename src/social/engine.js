@@ -158,7 +158,7 @@ export async function socialTick() {
   const lastOriginal = load('social').posts.filter((p) => p.action !== 'REPLY').at(-1);
   const quietHours = lastOriginal ? (Date.now() - Date.parse(lastOriginal.at)) / 3_600_000 : Infinity;
   if (!queue.length && quietHours > 3) {
-    await handle(`You haven't posted in ${Number.isFinite(quietHours) ? Math.round(quietHours) + ' hours' : 'ever'}. Recent market activity is on your dashboard. Post only if you actually have a thought (market take, narrative, joke, life update).`, { allowed: ['POST', 'IGNORE'] });
+    await handle(`You haven't posted in ${Number.isFinite(quietHours) ? Math.round(quietHours) + ' hours' : 'ever'}. Post only if you actually have a thought (market take, narrative, joke, life update).`, { allowed: ['POST', 'IGNORE'] });
   }
 }
 
